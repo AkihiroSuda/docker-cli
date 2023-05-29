@@ -393,7 +393,8 @@ volumes in a service:
     <td>
       <p>The Engine mounts binds and volumes <tt>read-write</tt> unless <tt>readonly</tt> option
       is given when mounting the bind or volume. Note that setting <tt>readonly</tt> for a
-      bind-mount does not make its submounts <tt>readonly</tt> on the current Linux implementation. See also <tt>bind-nonrecursive</tt>.</p>
+      bind-mount does not make its submounts <tt>readonly</tt> if Docker Engine is older than v25.0,
+      or Linux kernel is older than v5.12. See also <a href="#options-for-bind-mounts">Options for Bind Mounts</a>.</p>
       <ul>
         <li><tt>true</tt> or <tt>1</tt> or no value: Mounts the bind or volume read-only.</li>
         <li><tt>false</tt> or <tt>0</tt>: Mounts the bind or volume read-write.</li>
@@ -402,7 +403,7 @@ volumes in a service:
   </tr>
 </table>
 
-#### Options for Bind Mounts
+#### <a name="options-for-bind-mounts"></a> Options for Bind Mounts
 
 The following options can only be used for bind mounts (`type=bind`):
 
@@ -434,7 +435,8 @@ The following options can only be used for bind mounts (`type=bind`):
     <td><b>bind-nonrecursive</b></td>
     <td>
       By default, submounts are recursively bind-mounted as well. However, this behavior can be confusing when a
-      bind mount is configured with <tt>readonly</tt> option, because submounts are not mounted as read-only.
+      bind mount is configured with <tt>readonly</tt> option, because submounts are not mounted as read-only
+      if Docker Engine is older than v25, or Linux kernel is older than v5.12.
       Set <tt>bind-nonrecursive</tt> to disable recursive bind-mount.<br />
       <br />
       A value is optional:<br />
@@ -442,6 +444,36 @@ The following options can only be used for bind mounts (`type=bind`):
       <ul>
         <li><tt>true</tt> or <tt>1</tt>: Disables recursive bind-mount.</li>
         <li><tt>false</tt> or <tt>0</tt>: Default if you do not provide a value. Enables recursive bind-mount.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><b>bind-readonly-nonrecursive</b> or <b>bind-ro-nonrecursive</b></td>
+    <td>
+      If set to <tt>true</tt>, submounts are recursively bind-mounted
+      (unless <tt>bind-nonrecursive</tt> is set to <tt>true</tt> in conjunction),
+      but they are not recursively made read-only. This corresponds to the default behavior of Docker v24 and older.
+      A <tt>false</tt> value is ignored when the Docker daemon is running on Linux kernel older than v5.12.<br />
+      <br />
+      A value is optional:<br />
+      <br />
+      <ul>
+        <li><tt>true</tt> or <tt>1</tt>: Disables recursive read-only bind-mount.</li>
+        <li><tt>false</tt> or <tt>0</tt>: Default if you do not provide a value. Enables recursive read-only bind-mount (if possible).</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><b>bind-readonly-forcerecursive</b> or <b>bind-ro-forcerecursive</b></td>
+    <td>
+      If set to <tt>true</tt>, and submounts cannot be made recursively read-only, the Docker daemon raises an error.<br />
+      This option should be used in conjunction with <tt>bind-propagation=rprivate</tt>.
+      <br />
+      A value is optional:<br />
+      <br />
+      <ul>
+        <li><tt>true</tt> or <tt>1</tt>: Force recursive read-only bind-mount.</li>
+        <li><tt>false</tt> or <tt>0</tt>: Default if you do not provide a value. Do not force recursive read-only bind-mount.</li>
       </ul>
     </td>
   </tr>

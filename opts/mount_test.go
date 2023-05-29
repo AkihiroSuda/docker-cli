@@ -217,3 +217,72 @@ func TestMountOptSetTmpfsError(t *testing.T) {
 	assert.ErrorContains(t, m.Set("type=tmpfs,target=/foo,tmpfs-mode=foo"), "invalid value for tmpfs-mode")
 	assert.ErrorContains(t, m.Set("type=tmpfs"), "target is required")
 }
+
+func TestMountOptSetBindNonRecursive(t *testing.T) {
+	// Makes the mount itself non-recursive
+	t.Run("bind-nonrecursive", func(t *testing.T) {
+		var mount MountOpt
+		assert.NilError(t, mount.Set("type=bind,source=/foo,target=/bar,bind-nonrecursive"))
+		assert.Check(t, is.DeepEqual([]mounttypes.Mount{
+			{
+				Type:   mounttypes.TypeBind,
+				Source: "/foo",
+				Target: "/bar",
+				BindOptions: &mounttypes.BindOptions{
+					NonRecursive: true,
+				},
+			},
+		}, mount.Value()))
+	})
+
+	// The mount itself is still recursive, but it is made read-only non-recursively
+	t.Run("bind-readonly-nonrecursive", func(t *testing.T) {
+		var mount MountOpt
+		assert.NilError(t, mount.Set("type=bind,source=/foo,target=/bar,bind-readonly-nonrecursive"))
+		assert.Check(t, is.DeepEqual([]mounttypes.Mount{
+			{
+				Type:     mounttypes.TypeBind,
+				Source:   "/foo",
+				Target:   "/bar",
+				ReadOnly: true,
+				BindOptions: &mounttypes.BindOptions{
+					ReadOnlyNonRecursive: true,
+				},
+			},
+		}, mount.Value()))
+	})
+
+	t.Run("bind-readonly-forcerecursive", func(t *testing.T) {
+		var mount MountOpt
+		assert.NilError(t, mount.Set("type=bind,source=/foo,target=/bar,bind-readonly-forcerecursive"))
+		assert.Check(t, is.DeepEqual([]mounttypes.Mount{
+			{
+				Type:     mounttypes.TypeBind,
+				Source:   "/foo",
+				Target:   "/bar",
+				ReadOnly: true,
+				BindOptions: &mounttypes.BindOptions{
+					ReadOnlyForceRecursive: true,
+				},
+			},
+		}, mount.Value()))
+	})
+
+	// Valid combination, but not really useful
+	t.Run("bind-nonrecursive,bind-readonly-nonrecursive", func(t *testing.T) {
+		var mount MountOpt
+		assert.NilError(t, mount.Set("type=bind,source=/foo,target=/bar,bind-nonrecursive,bind-readonly-nonrecursive"))
+		assert.Check(t, is.DeepEqual([]mounttypes.Mount{
+			{
+				Type:     mounttypes.TypeBind,
+				Source:   "/foo",
+				Target:   "/bar",
+				ReadOnly: true,
+				BindOptions: &mounttypes.BindOptions{
+					NonRecursive:         true,
+					ReadOnlyNonRecursive: true,
+				},
+			},
+		}, mount.Value()))
+	})
+}

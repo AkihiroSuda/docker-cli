@@ -81,6 +81,18 @@ func (m *MountOpt) Set(value string) error {
 			case "bind-nonrecursive":
 				bindOptions().NonRecursive = true
 				continue
+			case "bind-readonly-nonrecursive", "bind-ro-nonrecursive":
+				// ReadOnlyNonRecursive makes the mount non-recursively read-only, but still leaves the mount recursive
+				// (unless NonRecursive is set to true in conjunction).
+				bindOptions().ReadOnlyNonRecursive = true
+				// Implies ReadOnly = true
+				mount.ReadOnly = true
+				continue
+			case "bind-readonly-forcerecursive", "bind-ro-forcerecursive":
+				bindOptions().ReadOnlyForceRecursive = true
+				// Implies ReadOnly = true
+				mount.ReadOnly = true
+				continue
 			default:
 				return fmt.Errorf("invalid field '%s' must be a key=value pair", field)
 			}

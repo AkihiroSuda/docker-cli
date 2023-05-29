@@ -468,7 +468,7 @@ according to RFC4862.
    * `ro`, `readonly`: `true` or `false` (default).
 
    **Note**: setting `readonly` for a bind mount does not make its submounts
-   read-only on the current Linux implementation. See also `bind-nonrecursive`.
+   read-only if Docker Engine is older than v25, or Linux kernel is older than v5.12. See also `bind` options below.
 
    Options specific to `bind`:
 
@@ -476,7 +476,14 @@ according to RFC4862.
    * `consistency`: `consistent`(default), `cached`, or `delegated`. Currently, only effective for Docker for Mac.
    * `bind-nonrecursive`: `true` or `false` (default). If set to `true`,
    submounts are not recursively bind-mounted. This option is useful for
-   `readonly` bind mount.
+   `readonly` bind mount when running on Linux kernel older than v5.12, which leaves submounts writable.
+   * `bind-ro-nonrecursive`, `bind-readonly-nonrecursive`: `true` or `false` (default). If set to `true`,
+   submounts are recursively bind-mounted (unless `bind-nonrecursive` is set to `true` in conjunction),
+   but they are not recursively made read-only. This corresponds to the default behavior of Docker Engine v24 and older.
+   A `false` value is ignored when the Docker daemon is running on Linux kernel older than v5.12.
+   * `bind-ro-forcerecursive`,`bind-readonly-forcerecursive`: `true` or `false` (default). If set to `true`,
+   and submounts cannot be made recursively read-only, the Docker daemon raises an error.
+   This option should be used in conjunction with `bind-propagation=rprivate`.
 
    Options specific to `volume`:
 
@@ -719,7 +726,7 @@ any options, the systems uses the following options:
    container. If 'HOST-DIR' is omitted,  Docker automatically creates the new
    volume on the host.  The `OPTIONS` are a comma delimited list and can be:
 
-   * [rw|ro]
+   * [rw|ro|ro-non-recursive|ro-force-recursive|rro]
    * [z|Z]
    * [`[r]shared`|`[r]slave`|`[r]private`]
    * [`delegated`|`cached`|`consistent`]
@@ -746,6 +753,14 @@ mode, respectively. By default, volumes are mounted in read-write mode.
 You can also specify the consistency requirement for the mount, either
 `:consistent` (the default), `:cached`, or `:delegated`.  Multiple options are
 separated by commas, e.g. `:ro,cached`.
+
+Starting with Docker Engine v25, the `:ro` mode makes its submounts read-only when running on
+Linux kernel v5.12 or newer.
+To fall back to the behavior of Docker Engine v24, specify `:ro-non-recursive`.
+To explicitly make the mount recursively read-only, specify `:ro-force-recursive`
+or `:rro`.
+The `:ro-force-recursive` (`:rro`) mode should be used in conjunction with `bind-propagation=rprivate`.
+The `:ro-force-recursive` (`:rro`) mode fails when running on Linux kernel older than v5.12.
 
 Labeling systems like SELinux require that proper labels are placed on volume
 content mounted into a container. Without a label, the security system might

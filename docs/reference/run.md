@@ -1714,12 +1714,20 @@ $ docker run -d --tmpfs /run:rw,noexec,nosuid,size=65536k my_image
 ### VOLUME (shared filesystems)
 
     -v, --volume=[host-src:]container-dest[:<options>]: Bind mount a volume.
-    The comma-delimited `options` are [rw|ro], [z|Z],
+    The comma-delimited `options` are [rw|ro|ro-non-recursive|ro-force-recursive|rro], [z|Z],
     [[r]shared|[r]slave|[r]private], and [nocopy].
     The 'host-src' is an absolute path or a name value.
 
     If neither 'rw' or 'ro' is specified then the volume is mounted in
     read-write mode.
+
+    Starting with Docker Engine v25, the `ro` mode makes its submounts read-only when running on
+    Linux kernel v5.12 or newer.
+    To fall back to the behavior of Docker v24, specify `ro-non-recursive`.
+    To explicitly make the mount recursively read-only, specify `ro-force-recursive`
+    or `rro`.
+    The `ro-force-recursive` (`rro`) mode should be used in conjunction with `bind-propagation=rprivate`.
+    The `ro-force-recursive` (`rro`) mode fails when running on Linux kernel older than v5.12.
 
     The `nocopy` mode is used to disable automatically copying the requested volume
     path in the container to the volume storage location.
